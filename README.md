@@ -1,1 +1,1 @@
-# ktproximity
+# AndroidKandiTag Proximity-Based Application
