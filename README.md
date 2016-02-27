@@ -1,1 +1,1 @@
-# AndroidKandiTag Proximity-Based Application
+# AndroidKandiTag
