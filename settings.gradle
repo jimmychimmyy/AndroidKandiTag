@@ -1,0 +1,1 @@
+include ':app', ':newaer-sdk-5.1.33'
