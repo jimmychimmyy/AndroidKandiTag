@@ -14,13 +14,6 @@
         android:layout_marginLeft="10dp"/>
 
     <ImageView
-        android:layout_toRightOf="@+id/toFriends"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/ic_arrowright"
-        android:layout_marginTop="15dp" />
-
-    <ImageView
         android:id="@+id/toBadges"
         android:layout_width="50dp"
         android:layout_height="50dp"
@@ -28,13 +21,6 @@
         android:layout_alignParentRight="true"
         android:layout_marginTop="10dp"
         android:layout_marginRight="10dp"/>
-
-    <ImageView
-        android:layout_toLeftOf="@+id/toBadges"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/ic_arrowleft"
-        android:layout_marginTop="15dp" />
 
     <ImageView
         android:id="@+id/toLocate"
@@ -67,143 +53,6 @@
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp"/>
 
-    <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:background="@drawable/ic_arrowup"
-        android:layout_marginRight="14dp"
-        android:layout_marginBottom="45dp" />
-
-    <!--
-
-    <RelativeLayout
-        android:layout_marginTop="60dp"
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/kitSwitchLayout"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:padding="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/p2p_kit"
-            android:id="@+id/kitLabel"
-            android:layout_centerHorizontal="true"
-            android:gravity="center" />
-
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/kitSwitch"
-            android:checked="true"
-            android:layout_below="@+id/kitLabel"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_marginTop="60dp"
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:padding="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/p2p"
-            android:id="@+id/p2pLabel"
-            android:layout_centerHorizontal="true"
-            android:gravity="center" />
-
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/p2pSwitch"
-            android:layout_centerHorizontal="true"
-            android:checked="true"
-            android:layout_below="@+id/p2pLabel" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_marginTop="60dp"
-        android:orientation="vertical"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:padding="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/geo"
-            android:id="@+id/geoLabel"
-            android:layout_centerHorizontal="true"
-            android:gravity="center" />
-
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/geoSwitch"
-            android:checked="false"
-            android:layout_below="@+id/geoLabel"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
-
-    <ScrollView
-        android:id="@+id/scrollView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/kitSwitchLayout"
-        android:layout_above="@+id/clearTextView">
-
-        <TextView
-            android:textColor="@color/white"
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin" />
-
-    </ScrollView>
-
-    <TextView
-        android:layout_marginBottom="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/clear"
-        android:id="@+id/clearTextView"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:textSize="20sp"
-        android:padding="16dp" />
-
-    <TextView
-        android:layout_marginBottom="50dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/changeColor"
-        android:id="@+id/changeColorTextView"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="false"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="false"
-        android:textSize="20sp"
-        android:padding="16dp"
-        android:layout_alignParentLeft="true" /> -->
-
     <com.skyfishjy.library.RippleBackground
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -221,7 +70,7 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/smile"
-            app:civ_border_width="0dp"
+            app:civ_border_width="2dp"
             app:civ_border_color="@color/white"/>
     </com.skyfishjy.library.RippleBackground>
 
