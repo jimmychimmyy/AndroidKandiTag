@@ -11,3 +11,9 @@ There will be a total of four activities:
 - Friends: see the profiles of other people and message them
 - Events: list of upcoming events with links to buy tickets
 - Settings: settings for proximity (wifi and bluetooth must be enabled for proximity to work)
+
+How do I sign up?
+- you can sign up using an existing facebook account
+
+How does the proximity work?
+- Proximity uses a combination of wifi, bluetooth and celluar data to find peers (all three plus location should be kept running in order for KandiTag to best determine nearby peers)
