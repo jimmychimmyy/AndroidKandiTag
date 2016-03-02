@@ -1,310 +1,274 @@
 package com.plur.kanditag;
 
-import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.text.format.DateFormat;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.CompoundButton;
-import android.widget.Switch;
-import android.widget.TextView;
+import com.nineoldandroids.view.ViewPropertyAnimator;
+import android.widget.ArrayAdapter;
 
-import java.util.UUID;
+import com.github.ksoichiro.android.observablescrollview.CacheFragmentStatePagerAdapter;
+import com.github.ksoichiro.android.observablescrollview.ObservableListView;
+import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks;
+import com.github.ksoichiro.android.observablescrollview.ScrollState;
+import com.github.ksoichiro.android.observablescrollview.ScrollUtils;
+import com.nineoldandroids.view.ViewHelper;
 
-import ch.uepaa.p2pkit.P2PKitClient;
-import ch.uepaa.p2pkit.P2PKitStatusCallback;
-import ch.uepaa.p2pkit.StatusResult;
-import ch.uepaa.p2pkit.StatusResultHandling;
-import ch.uepaa.p2pkit.discovery.GeoListener;
-import ch.uepaa.p2pkit.discovery.InfoTooLongException;
-import ch.uepaa.p2pkit.discovery.P2PListener;
-import ch.uepaa.p2pkit.discovery.entity.Peer;
-import ch.uepaa.p2pkit.internal.messaging.MessageTooLargeException;
-import ch.uepaa.p2pkit.messaging.MessageListener;
+import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements ColorPickerDialog.ColorPickerListener {
+/*
+    This is the main activity for KandiTag. activity_main should displays the user's profile image and their screen name.
+    There should also be scrollable viewpager options for (Find, Found, Connect, Events, Settings)
+    Find should display people who are close based on proximity
+    Found should display people who have connected before (i.e. their hasConnected = true)
+    Connect should display highlights of other people and messages
+    Events should display upcoming events
+    Settings should have settings for proximity and log out
+ */
 
-    private static final String APP_KEY = "eyJzaWduYXR1cmUiOiJ1V1BwKzhQMmkxOWIwSTJQUXExYmJISVNRb3FwNTl1QXVuUUlVS1hzaXRNeWwyQzI5M29yZEJna0FZVGdjdGVpcmhjbjd3ck1XWUtuTEJ0eHVpMHpvMGsrSUNja0JRSmIzTXNCQU81bjNtbTg5T2FObURMbmc1YnZCU2d5R05pVmpIMVEwUzg1Zjlac2syb29VTjRESkdBeTFnNXJmaXZQeXBVYmhBQ3kyRGM9IiwiYXBwSWQiOjE0MzgsInZhbGlkVW50aWwiOjE2OTQ1LCJhcHBVVVVJRCI6IjJEMDlBQkZDLUEzMDQtNDAwOC1BRDIxLTAyRjgyRjNDRUEzQiJ9";
+public class MainActivity extends AppCompatActivity implements ObservableScrollViewCallbacks {
 
-    // Enabling (1/2) - Enable the P2P Services
-    private void enableKit() {
+    private ObservableListView listView;
 
-        final StatusResult result = P2PKitClient.isP2PServicesAvailable(this);
-        if (result.getStatusCode() == StatusResult.SUCCESS) {
-            P2PKitClient client = P2PKitClient.getInstance(this);
-            logToView("enabling P2PKit");
-            client.enableP2PKit(mStatusCallback, APP_KEY);
-            mWantToEnable = false;
-        } else {
-            mWantToEnable = true;
-            logToView("Cannot start P2PKit, status code: " + result.getStatusCode());
-            StatusResultHandling.showAlertDialogForStatusError(this, result);
-        }
-    }
-
-    // Enabling (2/2) - Handle the status callbacks with the P2P Services
-    private final P2PKitStatusCallback mStatusCallback = new P2PKitStatusCallback() {
-
-        @Override
-        public void onEnabled() {
-            logToView("Successfully enabled P2P Services, with node id: " + P2PKitClient.getInstance(MainActivity.this).getNodeId().toString());
-
-            mP2pSwitch.setEnabled(true);
-            mGeoSwitch.setEnabled(true);
-
-            if (mShouldStartServices) {
-                mShouldStartServices = false;
-
-                startP2pDiscovery();
-            }
-        }
-
-        @Override
-        public void onSuspended() {
-            logToView("P2P Services suspended");
-
-            mGeoSwitch.setEnabled(false);
-            mP2pSwitch.setEnabled(false);
-        }
-
-        @Override
-        public void onError(StatusResult statusResult) {
-            logToView("Error in P2P Services with status: " + statusResult.getStatusCode());
-            StatusResultHandling.showAlertDialogForStatusError(MainActivity.this, statusResult);
-        }
-    };
-
-    private void disableKit() {
-        P2PKitClient client = P2PKitClient.getInstance(this);
-        client.getDiscoveryServices().removeGeoListener(mGeoDiscoveryListener);
-        client.getDiscoveryServices().removeP2pListener(mP2pDiscoveryListener);
-        client.getMessageServices().removeMessageListener(mMessageListener);
-
-        client.disableP2PKit();
-    }
-
-    private void startP2pDiscovery() {
-        try {
-            P2PKitClient.getInstance(this).getDiscoveryServices().setP2pDiscoveryInfo(getColorBytes(mCurrentColor));
-        } catch (InfoTooLongException e) {
-            logToView("P2pListener | The discovery info is too long");
-        }
-        P2PKitClient.getInstance(this).getDiscoveryServices().addP2pListener(mP2pDiscoveryListener);
-    }
-
-    // Listener of P2P discovery events
-    private final P2PListener mP2pDiscoveryListener = new P2PListener() {
-
-        @Override
-        public void onP2PStateChanged(final int state) {
-            logToView("P2pListener | State changed: " + state);
-        }
-
-        @Override
-        public void onPeerDiscovered(final Peer peer) {
-            byte[] colorBytes = peer.getDiscoveryInfo();
-            if (colorBytes != null && colorBytes.length == 3) {
-                logToView("P2pListener | Peer discovered: " + peer.getNodeId() + " with color: " + getHexRepresentation(colorBytes));
-            } else {
-                logToView("P2pListener | Peer discovered: " + peer.getNodeId() + " without color");
-            }
-        }
-
-        @Override
-        public void onPeerLost(final Peer peer) {
-            logToView("P2pListener | Peer lost: " + peer.getNodeId());
-        }
-
-        @Override
-        public void onPeerUpdatedDiscoveryInfo(Peer peer) {
-            byte[] colorBytes = peer.getDiscoveryInfo();
-            if (colorBytes != null && colorBytes.length == 3) {
-                logToView("P2pListener | Peer updated: " + peer.getNodeId() + " with new color: " + getHexRepresentation(colorBytes));
-            }
-        }
-    };
-
-    private void stopP2pDiscovery() {
-        P2PKitClient.getInstance(this).getDiscoveryServices().removeP2pListener(mP2pDiscoveryListener);
-        logToView("P2pListener removed");
-    }
-
-    private void startGeoDiscovery() {
-        P2PKitClient.getInstance(this).getMessageServices().addMessageListener(mMessageListener);
-
-        P2PKitClient.getInstance(this).getDiscoveryServices().addGeoListener(mGeoDiscoveryListener);
-    }
-
-    private final GeoListener mGeoDiscoveryListener = new GeoListener() {
-
-        @Override
-        public void onGeoStateChanged(final int state) {
-            logToView("GeoListener | State changed: " + state);
-        }
-
-        @Override
-        public void onPeerDiscovered(final UUID nodeId) {
-            logToView("GeoListener | Peer discovered: " + nodeId);
-
-            // sending a message to the peer
-            try {
-                P2PKitClient.getInstance(MainActivity.this).getMessageServices().sendMessage(nodeId, "SimpleChatMessage", "From Android: Hello GEO!".getBytes());
-            } catch (MessageTooLargeException e) {
-                logToView("GeoListener | " + e.getMessage());
-            }
-        }
-
-        @Override
-        public void onPeerLost(final UUID nodeId) {
-            logToView("GeoListener | Peer lost: " + nodeId);
-        }
-    };
-
-    private final MessageListener mMessageListener = new MessageListener() {
-
-        @Override
-        public void onMessageStateChanged(final int state) {
-            logToView("MessageListener | State changed: " + state);
-        }
-
-        @Override
-        public void onMessageReceived(final long timestamp, final UUID origin, final String type, final byte[] message) {
-            logToView("MessageListener | Message received: From=" + origin + " type=" + type + " message=" + new String(message));
-        }
-    };
-
-    private void stopGeoDiscovery() {
-        P2PKitClient.getInstance(this).getMessageServices().removeMessageListener(mMessageListener);
-        logToView("MessageListener removed");
-
-        P2PKitClient.getInstance(this).getDiscoveryServices().removeGeoListener(mGeoDiscoveryListener);
-        logToView("GeoListener removed");
-    }
-
-    private boolean mShouldStartServices;
-    private boolean mWantToEnable = false;
-
-    private int mCurrentColor = -65536;
-
-    private TextView mLogView;
-    private Switch mP2pSwitch;
-    private Switch mGeoSwitch;
-
+    /**
     @Override
-    public void onColorPicked(int colorCode) {
-        mCurrentColor = colorCode;
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        if (mShouldStartServices) {
-            enableKit();
-        } else if (P2PKitClient.getInstance(this).isEnabled()) {
-            try {
-                byte[] colorBytes = getColorBytes(mCurrentColor);
-                P2PKitClient.getInstance(this).getDiscoveryServices().setP2pDiscoveryInfo(colorBytes);
-            } catch (InfoTooLongException e) {
-                logToView("P2pListener | The discovery info is too long");
-            }
+        listView = (ObservableListView) findViewById(R.id.observablelistview);
+        listView.setScrollViewCallbacks(this);
+
+        // TODO this is dummy data to demonstrate listview
+        ArrayList<String> items = new ArrayList<String>();
+        for (int i = 1; i <= 100; i++) {
+            items.add("Item " + i);
         }
-    }
+        listView.setAdapter(new ArrayAdapter<String>(
+                this, android.R.layout.simple_list_item_1, items));
+
+    } **/
+
+    private View mHeaderView;
+    private View mToolbarView;
+    private int mBaseTranslationY;
+    private ViewPager mPager;
+    private NavigationAdapter mPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        setupUI();
+        setContentView(R.layout.activity_viewpagertab);
 
-        mShouldStartServices = true;
-        showColorPickerDialog();
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        mHeaderView = findViewById(R.id.header);
+        ViewCompat.setElevation(mHeaderView, getResources().getDimension(R.dimen.toolbar_elevation));
+        mToolbarView = findViewById(R.id.toolbar);
+        mPagerAdapter = new NavigationAdapter(getSupportFragmentManager());
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPager.setAdapter(mPagerAdapter);
+
+        SlidingTabLayout slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
+        slidingTabLayout.setCustomTabView(R.layout.tab_indicator, android.R.id.text1);
+        slidingTabLayout.setSelectedIndicatorColors(getResources().getColor(R.color.gold));
+        slidingTabLayout.setDistributeEvenly(false);
+        slidingTabLayout.setViewPager(mPager);
+
+        // When the page is selected, other fragments' scrollY should be adjusted
+        // according to the toolbar status(shown/hidden)
+        slidingTabLayout.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i2) {
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                propagateToolbarState(toolbarIsShown());
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+            }
+        });
+
+        propagateToolbarState(toolbarIsShown());
+
+        mPager.setCurrentItem(1); // this should set the current item on find instead of settings
+
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-
-        // When to user comes back from playstore after installing p2p services, try to enable p2pkit again
-        if(mWantToEnable && !P2PKitClient.getInstance(this).isEnabled()) {
-            enableKit();
+    public void onScrollChanged(int scrollY, boolean firstScroll, boolean dragging) {
+        if (dragging) {
+            int toolbarHeight = mToolbarView.getHeight();
+            float currentHeaderTranslationY = ViewHelper.getTranslationY(mHeaderView);
+            if (firstScroll) {
+                if (-toolbarHeight < currentHeaderTranslationY) {
+                    mBaseTranslationY = scrollY;
+                }
+            }
+            float headerTranslationY = ScrollUtils.getFloat(-(scrollY - mBaseTranslationY), -toolbarHeight, 0);
+            ViewPropertyAnimator.animate(mHeaderView).cancel();
+            ViewHelper.setTranslationY(mHeaderView, headerTranslationY);
         }
     }
 
-    private void setupUI() {
-        mLogView = (TextView) findViewById(R.id.textView);
+    @Override
+    public void onDownMotionEvent() {
+    }
 
-        findViewById(R.id.clearTextView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                clearLogs();
+    @Override
+    public void onUpOrCancelMotionEvent(ScrollState scrollState) {
+        mBaseTranslationY = 0;
+
+        Fragment fragment = getCurrentFragment();
+        if (fragment == null) {
+            return;
+        }
+        View view = fragment.getView();
+        if (view == null) {
+            return;
+        }
+
+        int toolbarHeight = mToolbarView.getHeight();
+        final ObservableListView listView = (ObservableListView) view.findViewById(R.id.scroll);
+        if (listView == null) {
+            return;
+        }
+        int scrollY = listView.getCurrentScrollY();
+        if (scrollState == ScrollState.DOWN) {
+            showToolbar();
+        } else if (scrollState == ScrollState.UP) {
+            if (toolbarHeight <= scrollY) {
+                hideToolbar();
+            } else {
+                showToolbar();
             }
-        });
-
-        findViewById(R.id.changeColorTextView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showColorPickerDialog();
+        } else {
+            // Even if onScrollChanged occurs without scrollY changing, toolbar should be adjusted
+            if (toolbarIsShown() || toolbarIsHidden()) {
+                // Toolbar is completely moved, so just keep its state
+                // and propagate it to other pages
+                propagateToolbarState(toolbarIsShown());
+            } else {
+                // Toolbar is moving but doesn't know which to move:
+                // you can change this to hideToolbar()
+                showToolbar();
             }
-        });
+        }
+    }
 
-        Switch kitSwitch = (Switch) findViewById(R.id.kitSwitch);
-        kitSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+    private Fragment getCurrentFragment() {
+        return mPagerAdapter.getItemAt(mPager.getCurrentItem());
+    }
 
-                if (isChecked) {
-                    enableKit();
-                } else {
-                    mP2pSwitch.setChecked(false);
-                    mGeoSwitch.setChecked(false);
+    private void propagateToolbarState(boolean isShown) {
+        int toolbarHeight = mToolbarView.getHeight();
 
-                    mWantToEnable = false;
-                    disableKit();
+        // Set scrollY for the fragments that are not created yet
+        mPagerAdapter.setScrollY(isShown ? 0 : toolbarHeight);
+
+        // Set scrollY for the active fragments
+        for (int i = 0; i < mPagerAdapter.getCount(); i++) {
+            // Skip current item
+            if (i == mPager.getCurrentItem()) {
+                continue;
+            }
+
+            // Skip destroyed or not created item
+            Fragment f = mPagerAdapter.getItemAt(i);
+            if (f == null) {
+                continue;
+            }
+
+            View view = f.getView();
+            if (view == null) {
+                continue;
+            }
+            ObservableListView listView = (ObservableListView) view.findViewById(R.id.scroll);
+            if (isShown) {
+                // Scroll up
+                if (0 < listView.getCurrentScrollY()) {
+                    listView.setSelection(0);
+                }
+            } else {
+                // Scroll down (to hide padding)
+                if (listView.getCurrentScrollY() < toolbarHeight) {
+                    listView.setSelection(1);
                 }
             }
-        });
+        }
+    }
 
-        mP2pSwitch = (Switch) findViewById(R.id.p2pSwitch);
-        mP2pSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    startP2pDiscovery();
-                } else {
-                    stopP2pDiscovery();
-                }
+    private boolean toolbarIsShown() {
+        return ViewHelper.getTranslationY(mHeaderView) == 0;
+    }
+
+    private boolean toolbarIsHidden() {
+        return ViewHelper.getTranslationY(mHeaderView) == -mToolbarView.getHeight();
+    }
+
+    private void showToolbar() {
+        float headerTranslationY = ViewHelper.getTranslationY(mHeaderView);
+        if (headerTranslationY != 0) {
+            ViewPropertyAnimator.animate(mHeaderView).cancel();
+            ViewPropertyAnimator.animate(mHeaderView).translationY(0).setDuration(200).start();
+        }
+        propagateToolbarState(true);
+    }
+
+    private void hideToolbar() {
+        float headerTranslationY = ViewHelper.getTranslationY(mHeaderView);
+        int toolbarHeight = mToolbarView.getHeight();
+        if (headerTranslationY != -toolbarHeight) {
+            ViewPropertyAnimator.animate(mHeaderView).cancel();
+            ViewPropertyAnimator.animate(mHeaderView).translationY(-toolbarHeight).setDuration(200).start();
+        }
+        propagateToolbarState(false);
+    }
+
+    private static class NavigationAdapter extends CacheFragmentStatePagerAdapter {
+
+        //private static final String[] TITLES = new String[]{"Applepie", "Butter Cookie", "Cupcake", "Donut", "Eclair", "Froyo", "Gingerbread", "Honeycomb", "Ice Cream Sandwich", "Jelly Bean", "KitKat", "Lollipop"};
+        private static final String[] PAGES = new String[]{"Settings", "Find", "Found", "Connect", "Events"};
+
+        private int mScrollY;
+
+        public NavigationAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        public void setScrollY(int scrollY) {
+            mScrollY = scrollY;
+        }
+
+        @Override
+        protected Fragment createItem(int position) {
+            Fragment f = new ViewPagerTabListViewFragment();
+            if (0 < mScrollY) {
+                Bundle args = new Bundle();
+                args.putInt(ViewPagerTabListViewFragment.ARG_INITIAL_POSITION, 1);
+                f.setArguments(args);
             }
-        });
+            return f;
+        }
 
-        mGeoSwitch = (Switch) findViewById(R.id.geoSwitch);
-        mGeoSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    startGeoDiscovery();
-                } else {
-                    stopGeoDiscovery();
-                }
-            }
-        });
-    }
+        @Override
+        public int getCount() {
+            return PAGES.length;
+        }
 
-    private void logToView(String message) {
-        CharSequence currentTime = DateFormat.format("hh:mm:ss - ", System.currentTimeMillis());
-        mLogView.setText(currentTime + message + "\n" + mLogView.getText());
-    }
-
-    private void clearLogs() {
-        mLogView.setText("");
-    }
-
-    private String getHexRepresentation(byte[] colorBytes) {
-        int colorCode = Color.rgb(colorBytes[0] & 0xFF, colorBytes[1] & 0xFF, colorBytes[2] & 0xFF);
-        return String.format("#%06X", (0xFFFFFF & colorCode));
-    }
-
-    private byte[] getColorBytes(int color) {
-        return new byte[] {(byte) Color.red(color), (byte) Color.green(color), (byte) Color.blue(color)};
-    }
-
-    private void showColorPickerDialog() {
-        ColorPickerDialog dialog = ColorPickerDialog.newInstance(mCurrentColor);
-        dialog.show(getFragmentManager(), "ColorPicker");
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return PAGES[position];
+        }
     }
 }

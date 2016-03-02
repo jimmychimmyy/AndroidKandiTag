@@ -14,4 +14,30 @@
         <item name="colorAccent">@color/black</item>
     </style>
 
+    <style name="WhiteAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/gold</item>
+    </style>
+
+    <style name="Toolbar" parent="Theme.AppCompat">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/gold</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="Spinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@drawable/abc_popup_background_mtrl_mult</item>
+    </style>
+
+    <style name="AppTheme.SpinnerItemStyle" parent="Widget.AppCompat.TextView.SpinnerItem">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <style name="AppTheme.SpinnerDropDownItemStyle" parent="Widget.AppCompat.DropDownItem.Spinner">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:textColor">#212121</item>
+    </style>
+
 </resources>

@@ -7,6 +7,7 @@ public class Person {
 
     private String firstName, lastName;
     private String _ktid, _uid;
+    private boolean hasConnected;
 
     public Person() {}
 
@@ -26,6 +27,10 @@ public class Person {
         this._uid = _id;
     }
 
+    public void setHasConnected(boolean connected) {
+        this.hasConnected = connected;
+    }
+
     public String getFirstName() {
         return this.firstName;
     }
@@ -40,5 +45,9 @@ public class Person {
 
     public String getUId() {
         return this._uid;
+    }
+
+    public boolean getHasConnected() {
+        return this.hasConnected;
     }
 }
