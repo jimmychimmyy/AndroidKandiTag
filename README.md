@@ -9,7 +9,7 @@ Objective: This application allows users to add friends based on their proximity
 There will be a total of four activities:
 - Find: see nearby people and add them
 - Found: see the profiles of other people and message them
-- Connect: message and see other user's activity
+- Connect: messages and public activity (posts) 
 - Events: list of upcoming events with links to buy tickets
 - Settings: settings for proximity (wifi and bluetooth must be enabled for proximity to work)
 
